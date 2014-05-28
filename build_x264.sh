@@ -7,12 +7,15 @@
 #Make sure you have installed: Xcode/Preferences/Downloads/Components/Command Line Tools
 #
 
-DESTV7=install/armv7
-DESTV7S=install/armv7s
-DEST64=install/arm64
+#Lib install dir.
+DEST=install
+
 
 #This is decided by your SDK version.
 SDK_VERSION="7.1"
+
+#a=Archs
+ARCHS="armv7 armv7s arm64"
 
 DEVPATH=/Applications/XCode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${SDK_VERSION}.sdk
 #DEVPATH=/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${SDK_VERSION}.sdk
@@ -22,65 +25,29 @@ git clone git://git.videolan.org/x264.git x264
 
 cd x264
 
-echo "Building armv7 ......"
-
 export CC=`xcodebuild -find clang`
 
-./configure \
+for ARCH in $ARCHS; do
+    
+    echo "Building $ARCH ......"
+
+    ./configure \
     --host=arm-apple-darwin \
     --sysroot=$DEVPATH \
-    --prefix=$DESTV7 \
-    --extra-cflags='-arch armv7' \
-    --extra-ldflags="-L$DEVPATH/usr/lib/system -arch armv7" \
+    --prefix=$DEST/$ARCH \
+    --extra-cflags="-arch $ARCH" \
+    --extra-ldflags="-L$DEVPATH/usr/lib/system -arch $ARCH" \
     --enable-pic \
     --enable-static \
     --disable-asm
 
-make && make install && make clean
+    make && make install && make clean
 
-echo "installed: $DESTV7"
+    echo "Installed: $DEST/$ARCH"
 
-
-echo "Building armv7s ......"
-
-#export CC=`xcodebuild -find clang`
-
-./configure \
-    --host=arm-apple-darwin \
-    --sysroot=$DEVPATH \
-    --prefix=$DESTV7S \
-    --extra-cflags='-arch armv7s' \
-    --extra-ldflags="-L$DEVPATH/usr/lib/system -arch armv7s" \
-    --enable-pic \
-    --enable-static \
-    --disable-asm
-
-make && make install && make clean
-
-echo "installed: $DESTV7S"
-
-
-echo "Building arm64 ......"
-
-#export CC=`xcodebuild -find clang`
-
-./configure \
-    --host=arm-apple-darwin \
-    --sysroot=$DEVPATH \
-    --prefix=$DEST64 \
-    --extra-cflags='-arch arm64' \
-    --extra-ldflags="-L$DEVPATH/usr/lib/system -arch arm64" \
-    --enable-pic \
-    --enable-static \
-    --disable-asm
-
-make && make install  && make clean
-
-echo "Installed: $DEST64"
-
+done
 
 echo "Combining library ......"
-ARCHS="armv7 armv7s arm64"
 BUILD_LIBS="libx264.a"
 OUTPUT_DIR="iPhoneOS"
 
@@ -93,15 +60,15 @@ mkdir $OUTPUT_DIR/include
 LIPO_CREATE=""
 
 for ARCH in $ARCHS; do
-	LIPO_CREATE="$LIPO_CREATE $ARCH/lib/$BUILD_LIBS "
+    LIPO_CREATE="$LIPO_CREATE $ARCH/lib/$BUILD_LIBS "
 done
 
 lipo -create $LIPO_CREATE -output $OUTPUT_DIR/lib/$BUILD_LIBS
 cp -f $ARCH/include/*.* $OUTPUT_DIR/include/
 
-echo "********************************************"
+echo "************************************************************"
 lipo -i $OUTPUT_DIR/lib/$BUILD_LIBS
-echo "********************************************"
+echo "************************************************************"
 
 echo "OK, merge done!"
 
