@@ -14,7 +14,7 @@ DEST=install
 #This is decided by your SDK version.
 SDK_VERSION="7.1"
 
-#a=Archs
+#Archs
 ARCHS="armv7 armv7s arm64"
 
 DEVPATH=/Applications/XCode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${SDK_VERSION}.sdk
